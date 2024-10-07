@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secured Environment</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 20px;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        #warning {
+            display: none;
+            color: red;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #textArea {
+            width: 80%;
+            height: 300px;
+            font-size: 16px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        #resetBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #violations {
+            width: 80%;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #violations h3 {
+            margin-top: 0;
+        }
+        .violation-item {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="warning">Warning: Please stay focused on this window!</div>
+    <textarea id="textArea" placeholder="Start typing..."></textarea>
+
+    <div id="controls">
+        <button id="resetBtn">Reset Security</button>
+    </div>
+
+    <div id="violations">
+        <h3>Violation Counts</h3>
+        <div class="violation-item">Copy Attempts: <span id="copyCount">0</span></div>
+        <div class="violation-item">Paste Attempts: <span id="pasteCount">0</span></div>
+        <div class="violation-item">Cut Attempts: <span id="cutCount">0</span></div>
+        <div class="violation-item">Focus Losses: <span id="focusCount">0</span></div>
+        <div class="violation-item">Context Menu Attempts: <span id="contextCount">0</span></div>
+        <div class="violation-item">Keyboard Shortcut Attempts: <span id="shortcutCount">0</span></div>
+    </div>
+
+    <script>
+        const textArea = document.getElementById('textArea');
+        const warning = document.getElementById('warning');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Violation counters
+        const violationCounters = {
+            copy: 0,
+            paste: 0,
+            cut: 0,
+            focus: 0,
+            context: 0,
+            shortcut: 0
+        };
+
+        // Elements to display counts
+        const copyCountEl = document.getElementById('copyCount');
+        const pasteCountEl = document.getElementById('pasteCount');
+        const cutCountEl = document.getElementById('cutCount');
+        const focusCountEl = document.getElementById('focusCount');
+        const contextCountEl = document.getElementById('contextCount');
+        const shortcutCountEl = document.getElementById('shortcutCount');
+
+        // Function to update the display of violation counts
+        function updateViolationDisplay() {
+            copyCountEl.textContent = violationCounters.copy;
+            pasteCountEl.textContent = violationCounters.paste;
+            cutCountEl.textContent = violationCounters.cut;
+            focusCountEl.textContent = violationCounters.focus;
+            contextCountEl.textContent = violationCounters.context;
+            shortcutCountEl.textContent = violationCounters.shortcut;
+        }
+
+        // Initialize violation display
+        updateViolationDisplay();
+
+        // Function to show warning
+        function showWarning(message) {
+            warning.textContent = message;
+            warning.style.display = 'block';
+        }
+
+        // Function to hide warning
+        function hideWarning() {
+            warning.style.display = 'none';
+        }
+
+        // Prevent copy, paste, and cut in the text area
+        ['copy', 'paste', 'cut'].forEach(eventType => {
+            textArea.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                violationCounters[eventType]++;
+                updateViolationDisplay();
+                alert(`Action "${eventType}" is not allowed.`);
+            });
+        });
+
+        // Disable right-click context menu
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            violationCounters.context++;
+            updateViolationDisplay();
+            alert('Right-click is disabled.');
+        });
+
+        // Detect window losing focus
+        window.addEventListener('blur', () => {
+            violationCounters.focus++;
+            updateViolationDisplay();
+            showWarning('Warning: Please stay focused on this window!');
+            textArea.disabled = true;
+        });
+
+        // Detect window gaining focus
+        window.addEventListener('focus', () => {
+            if (document.hasFocus()) {
+                hideWarning();
+                textArea.disabled = false;
+            }
+        });
+
+        // Disable certain keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+            // Define the shortcuts to disable
+            const forbiddenShortcuts = [
+                { ctrl: true, key: 't' }, // Ctrl+T
+                { ctrl: true, key: 'w' }, // Ctrl+W
+                { ctrl: true, shift: true, key: 'I' }, // Ctrl+Shift+I
+                { key: 'F12' } // F12
+            ];
+
+            const isForbidden = forbiddenShortcuts.some(shortcut => {
+                return (
+                    e.key === shortcut.key &&
+                    (shortcut.ctrl ? e.ctrlKey : true) &&
+                    (shortcut.shift ? e.shiftKey : true)
+                );
+            });
+
+            if (isForbidden) {
+                e.preventDefault();
+                violationCounters.shortcut++;
+                updateViolationDisplay();
+                alert('This keyboard shortcut is disabled.');
+            }
+        });
+
+        // Reset Security Function
+        resetBtn.addEventListener('click', () => {
+            // Reset violation counters
+            for (let key in violationCounters) {
+                if (violationCounters.hasOwnProperty(key)) {
+                    violationCounters[key] = 0;
+                }
+            }
+            updateViolationDisplay();
+
+            // Hide warning and enable text area
+            hideWarning();
+            textArea.disabled = false;
+        });
+
+        // Additional Security Measures (Optional)
+        // You can add more event listeners or security checks here as needed.
+    </script>
+</body>
+</html>
